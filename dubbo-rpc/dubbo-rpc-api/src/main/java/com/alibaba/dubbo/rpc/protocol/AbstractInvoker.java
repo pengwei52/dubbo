@@ -164,10 +164,9 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         }
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
 
-        // 执行调用
         try {
+            // 执行调用
             return doInvoke(invocation);
-        // TODO 【8023 biz exception】
         } catch (InvocationTargetException e) { // biz exception
             Throwable te = e.getTargetException();
             if (te == null) {

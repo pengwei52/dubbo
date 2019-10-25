@@ -116,6 +116,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
             if (registry != null) {
                 return registry;
             }
+
             // 缓存不存在，进行创建 Registry 对象
             registry = createRegistry(url);
             if (registry == null) {

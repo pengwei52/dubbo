@@ -54,6 +54,7 @@ public class ListenerInvokerWrapper<T> implements Invoker<T> {
             for (InvokerListener listener : listeners) {
                 if (listener != null) {
                     try {
+                    	// 若执行过程中发生异常 RuntimeException ，仅打印错误日志，继续执行，最终不抛出异常。
                         listener.referred(invoker);
                     } catch (Throwable t) {
                         logger.error(t.getMessage(), t);

@@ -29,6 +29,7 @@ public class InvokerWrapper<T> implements Invoker<T> {
 
     private final Invoker<T> invoker;
 
+    // 服务URL
     private final URL url;
 
     public InvokerWrapper(Invoker<T> invoker, URL url) {

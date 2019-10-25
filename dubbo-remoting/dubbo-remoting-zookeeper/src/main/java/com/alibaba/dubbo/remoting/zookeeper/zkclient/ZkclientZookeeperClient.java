@@ -41,16 +41,22 @@ public class ZkclientZookeeperClient extends AbstractZookeeperClient<IZkChildLis
         client = new ZkClientWrapper(url.getBackupAddress(), 30000);
         // 添加连接监听器
         client.addListener(new IZkStateListener() {
+            @Override
             public void handleStateChanged(KeeperState state) throws Exception {
                 ZkclientZookeeperClient.this.state = state;
                 if (state == KeeperState.Disconnected) {
+                    // 客户端断开连接
                     stateChanged(StateListener.DISCONNECTED);
                 } else if (state == KeeperState.SyncConnected) {
+                    // 客户端建立连接
                     stateChanged(StateListener.CONNECTED);
                 }
             }
 
+            // 在zookeeper会话过期并创建新会话之后调用。
+            @Override
             public void handleNewSession() throws Exception {
+                // 重连
                 stateChanged(StateListener.RECONNECTED);
             }
         });
@@ -58,7 +64,7 @@ public class ZkclientZookeeperClient extends AbstractZookeeperClient<IZkChildLis
         client.start();
     }
 
-
+    @Override
     public void createPersistent(String path) {
         try {
             client.createPersistent(path);
@@ -66,6 +72,7 @@ public class ZkclientZookeeperClient extends AbstractZookeeperClient<IZkChildLis
         }
     }
 
+    @Override
     public void createEphemeral(String path) {
         try {
             client.createEphemeral(path);
@@ -73,6 +80,7 @@ public class ZkclientZookeeperClient extends AbstractZookeeperClient<IZkChildLis
         }
     }
 
+    @Override
     public void delete(String path) {
         try {
             client.delete(path);
@@ -80,6 +88,7 @@ public class ZkclientZookeeperClient extends AbstractZookeeperClient<IZkChildLis
         }
     }
 
+    @Override
     public List<String> getChildren(String path) {
         try {
             return client.getChildren(path);
@@ -88,6 +97,7 @@ public class ZkclientZookeeperClient extends AbstractZookeeperClient<IZkChildLis
         }
     }
 
+    @Override
     public boolean checkExists(String path) {
         try {
             return client.exists(path);
@@ -96,14 +106,17 @@ public class ZkclientZookeeperClient extends AbstractZookeeperClient<IZkChildLis
         return false;
     }
 
+    @Override
     public boolean isConnected() {
         return state == KeeperState.SyncConnected;
     }
 
+    @Override
     public void doClose() {
         client.close();
     }
 
+    @Override
     public IZkChildListener createTargetChildListener(String path, final ChildListener listener) {
         return new IZkChildListener() {
             public void handleChildChange(String parentPath, List<String> currentChilds)
@@ -113,10 +126,12 @@ public class ZkclientZookeeperClient extends AbstractZookeeperClient<IZkChildLis
         };
     }
 
+    @Override
     public List<String> addTargetChildListener(String path, final IZkChildListener listener) {
         return client.subscribeChildChanges(path, listener);
     }
 
+    @Override
     public void removeTargetChildListener(String path, IZkChildListener listener) {
         client.unsubscribeChildChanges(path, listener);
     }

@@ -42,7 +42,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
      */
     private final URL url;
     /**
-     * 指向数量
+     * 引用该客户端的数量
      */
     private final AtomicInteger refenceCount = new AtomicInteger(0);
     /**
@@ -50,7 +50,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
      */
     private final ConcurrentMap<String, LazyConnectExchangeClient> ghostClientMap;
     /**
-     * 客户端
+     * 真实客户端
      */
     private ExchangeClient client;
 

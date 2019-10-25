@@ -37,6 +37,7 @@ public class ChannelHandlers {
     protected ChannelHandlers() {
     }
 
+    // 包装服务端处理器和服务URL
     public static ChannelHandler wrap(ChannelHandler handler, URL url) {
         return ChannelHandlers.getInstance().wrapInternal(handler, url);
     }

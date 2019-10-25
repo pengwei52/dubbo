@@ -41,6 +41,7 @@ public class ProviderConsumerRegTable {
      * key：服务提供者 URL 服务键
      */
     public static ConcurrentHashMap<String, Set<ProviderInvokerWrapper>> providerInvokers = new ConcurrentHashMap<String, Set<ProviderInvokerWrapper>>();
+
     /**
      * 服务消费者 Invoker 集合
      *

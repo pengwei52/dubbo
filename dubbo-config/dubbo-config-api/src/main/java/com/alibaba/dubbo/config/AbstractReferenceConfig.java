@@ -33,6 +33,7 @@ public abstract class AbstractReferenceConfig extends AbstractInterfaceConfig {
 
     private static final long serialVersionUID = -2786526984373031126L;
 
+    // 如果没有设置Reference属性，则引用配置默认值将生效
     // ======== Reference config default values, will take effect if reference's attribute is not set  ========
 
     // check if service provider exists

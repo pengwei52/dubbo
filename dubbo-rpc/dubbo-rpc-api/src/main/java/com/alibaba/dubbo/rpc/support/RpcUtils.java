@@ -84,6 +84,8 @@ public class RpcUtils {
     }
 
     /**
+     * 无效操作:默认情况下，调用id将添加到异步操作中。
+     *
      * Idempotent operation: invocation id will be added in async operation by default
      *
      * @param url

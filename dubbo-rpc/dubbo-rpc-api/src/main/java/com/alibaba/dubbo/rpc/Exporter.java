@@ -19,7 +19,7 @@ package com.alibaba.dubbo.rpc;
 /**
  * Exporter. (API/SPI, Prototype, ThreadSafe)
  *
- * Exporter ，Invoker 暴露服务在 Protocol 上的对象。
+ * Exporter ，Invoker 暴露服务在 Protocol 上的对象。维护Invoker的生命周期
  *
  * @see com.alibaba.dubbo.rpc.Protocol#export(Invoker)
  * @see com.alibaba.dubbo.rpc.ExporterListener

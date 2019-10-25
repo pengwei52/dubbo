@@ -42,6 +42,7 @@ public class Transporters {
         return bind(URL.valueOf(url), handler);
     }
 
+    // 服务端
     public static Server bind(URL url, ChannelHandler... handlers) throws RemotingException {
         if (url == null) {
             throw new IllegalArgumentException("url == null");
@@ -64,6 +65,7 @@ public class Transporters {
         return connect(URL.valueOf(url), handler);
     }
 
+    // 客户端
     public static Client connect(URL url, ChannelHandler... handlers) throws RemotingException {
         if (url == null) {
             throw new IllegalArgumentException("url == null");
@@ -81,6 +83,7 @@ public class Transporters {
         return getTransporter().connect(url, handler);
     }
 
+    // 获取通讯实现
     public static Transporter getTransporter() {
         return ExtensionLoader.getExtensionLoader(Transporter.class).getAdaptiveExtension();
     }

@@ -27,7 +27,8 @@ public interface ExtensionFactory {
     /**
      * Get extension.
      *
-     * 获得拓展对象
+     * 获得拓展对象,向创建的拓展对象注入依赖属性。
+     * 在实际代码中，我们可以看到不仅仅获得的是拓展对象，也可以是 Spring 中的 Bean 对象。
      *
      * @param type object type. 拓展接口
      * @param name object name. 拓展名

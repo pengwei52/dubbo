@@ -36,14 +36,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
 
 /**
- * Load dubbo extensions
- * <ul>
- * <li>auto inject dependency extension </li>
- * <li>auto wrap extension in wrapper </li>
- * <li>default extension is an adaptive instance</li>
- * </ul>
  *
- * 拓展加载器
+ * 拓展加载器, Dubbo SPI 的核心。
  *
  * Dubbo使用的扩展点获取。<p>
  * <ul>
@@ -51,6 +45,13 @@ import java.util.regex.Pattern;
  *      <li>自动Wrap上扩展点的Wrap类。</li>
  *      <li>缺省获得的的扩展点是一个Adaptive Instance。</li>
  * </ul>
+ *
+ * Dubbo 改进了 JDK 标准的 SPI 的以下问题：
+ *  1.JDK 标准的 SPI 会一次性实例化扩展点所有实现，如果有扩展实现初始化很耗时，但如果没用上也加载，会很浪费资源。
+ *  2.如果扩展点加载失败，连扩展点的名称都拿不到了。比如：JDK 标准的 ScriptEngine，通过 getName() 获取脚本类型的名称，
+ *    但如果 RubyScriptEngine 因为所依赖的 jruby.jar 不存在，导致 RubyScriptEngine 类加载失败，这个失败原因被吃掉了，
+ *    和 ruby 对应不起来，当用户执行 ruby 脚本时，会报不支持 ruby，而不是真正失败的原因。
+ *  3.增加了对扩展点 IoC 和 AOP 的支持，一个扩展点可以直接 setter 注入其它扩展点。
  *
  * Dubbo SPI ：https://dubbo.gitbooks.io/dubbo-dev-book/SPI.html
  * Java  SPI ：http://blog.csdn.net/top_code/article/details/51934459
@@ -67,15 +68,23 @@ public class ExtensionLoader<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtensionLoader.class);
 
+    // 默认扫描以下三个路径下的SPI文件
+
+    // Java SPI 的配置目录。Dubbo SPI 对 Java SPI 做了兼容。
     private static final String SERVICES_DIRECTORY = "META-INF/services/";
 
+    // 用于用户自定义的拓展实现。
     private static final String DUBBO_DIRECTORY = "META-INF/dubbo/";
 
+    // 用于 Dubbo 内部提供的拓展实现
     private static final String DUBBO_INTERNAL_DIRECTORY = DUBBO_DIRECTORY + "internal/";
 
+    // 拓展名分隔符，使用逗号
     private static final Pattern NAME_SEPARATOR = Pattern.compile("\\s*[,]+\\s*");
 
     // ============================== 静态属性 ==============================
+    // ExtensionLoader 是 ExtensionLoader 的管理容器。一个拓展( 拓展接口 )对应一个 ExtensionLoader 对象。
+    // 例如，Protocol 和 Filter 分别对应一个 ExtensionLoader 对象。
 
     /**
      * 拓展加载器集合
@@ -95,6 +104,12 @@ public class ExtensionLoader<T> {
     private static final ConcurrentMap<Class<?>, Object> EXTENSION_INSTANCES = new ConcurrentHashMap<Class<?>, Object>();
 
     // ============================== 对象属性 ==============================
+    // 一个拓展通过其 ExtensionLoader 对象，加载它的拓展实现们。我们会发现多个属性都是 “cached“ 开头。
+    // ExtensionLoader 考虑到性能和资源的优化，读取拓展配置后，会首先进行缓存。
+    // 等到 Dubbo 代码真正用到对应的拓展实现时，进行拓展实现的对象的初始化。
+    // 并且，初始化完成后，也会进行缓存。也就是说：
+    //    1.缓存加载的拓展配置
+    //    2.缓存创建的拓展实现对象
 
     /**
      * 拓展接口。
@@ -102,9 +117,11 @@ public class ExtensionLoader<T> {
      */
     private final Class<?> type;
     /**
-     * 对象工厂
+     * 对象工厂, 功能上和 Spring IOC 一致。
      *
      * 用于调用 {@link #injectExtension(Object)} 方法，向拓展对象注入依赖的属性。
+     *
+     * 向创建的拓展注入其依赖的属性。例如，CacheFilter.cacheFactory 属性。
      *
      * 例如，StubProxyFactoryWrapper 中有 `Protocol protocol` 属性。
      */
@@ -152,6 +169,14 @@ public class ExtensionLoader<T> {
     private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<String, Holder<Object>>();
     /**
      * 缓存的自适应( Adaptive )拓展对象
+     *
+     * 第一种，标记在类上，代表手动实现它是一个拓展接口的 Adaptive 拓展实现类。
+     *  目前 Dubbo 项目里，只有 ExtensionFactory 拓展的实现类 AdaptiveExtensionFactory 有这么用。详细解析见 「AdaptiveExtensionFactory」 。
+     * 第二种，标记在拓展接口的方法上，代表自动生成代码实现该接口的 Adaptive 拓展实现类。
+     *  value ，从 Dubbo URL 获取参数中，使用键名( Key )，获取键值。该值为真正的拓展名。
+     *      自适应拓展实现类，会获取拓展名对应的真正的拓展对象。通过该对象，执行真正的逻辑。
+     *      可以设置多个键名( Key )，顺序获取直到有值。若最终获取不到，使用默认拓展名。
+     *  在 「createAdaptiveExtensionClassCode」 详细解析。
      */
     private final Holder<Object> cachedAdaptiveInstance = new Holder<Object>();
     /**
@@ -711,7 +736,7 @@ public class ExtensionLoader<T> {
                 EXTENSION_INSTANCES.putIfAbsent(clazz, clazz.newInstance());
                 instance = (T) EXTENSION_INSTANCES.get(clazz);
             }
-            // 注入依赖的属性
+            // 注入依赖的属性 setXxx  (SPI注入(Adaptive)、Spring注入)
             injectExtension(instance);
             // 创建 Wrapper 拓展对象
             Set<Class<?>> wrapperClasses = cachedWrapperClasses;
@@ -728,6 +753,7 @@ public class ExtensionLoader<T> {
     }
 
     /**
+     * 扩展点自动装配。
      * 注入依赖的属性
      *
      * @param instance 拓展对象
@@ -745,7 +771,7 @@ public class ExtensionLoader<T> {
                         try {
                             // 获得属性
                             String property = method.getName().length() > 3 ? method.getName().substring(3, 4).toLowerCase() + method.getName().substring(4) : "";
-                            // 获得属性值
+                            // 通过对象工厂，获取实例中依赖的属性值(比如：SPI接口的注入，spring依赖的注入),SPI注入的是Adaptive生成的动态对象
                             Object object = objectFactory.getExtension(pt, property);
                             // 设置属性值
                             if (object != null) {
@@ -777,7 +803,7 @@ public class ExtensionLoader<T> {
     }
 
     /**
-     * 获得拓展实现类数组
+     * 获得拓展实现类的Class数组
      *
      * @return 拓展实现类数组
      */
@@ -785,6 +811,7 @@ public class ExtensionLoader<T> {
         // 从缓存中，获得拓展实现类数组
         Map<String, Class<?>> classes = cachedClasses.get();
         if (classes == null) {
+            // 同步
             synchronized (cachedClasses) {
                 classes = cachedClasses.get();
                 if (classes == null) {
@@ -858,17 +885,21 @@ public class ExtensionLoader<T> {
                             while ((line = reader.readLine()) != null) {
                                 // 跳过当前被注释掉的情况，例如 #spring=xxxxxxxxx
                                 final int ci = line.indexOf('#');
-                                if (ci >= 0) line = line.substring(0, ci);
+                                if (ci >= 0)
+                                    line = line.substring(0, ci);
                                 line = line.trim();
+                                // 如果不是注释行
                                 if (line.length() > 0) {
                                     try {
                                         // 拆分，key=value 的配置格式
                                         String name = null;
                                         int i = line.indexOf('=');
+                                        // 兼容JAVA原生SPI，原生SPI只有一个实现类全限定名
                                         if (i > 0) {
-                                            name = line.substring(0, i).trim();
-                                            line = line.substring(i + 1).trim();
+                                            name = line.substring(0, i).trim();     // SPI name
+                                            line = line.substring(i + 1).trim();    // SPI impl
                                         }
+                                        // 如果SPI实现类名不为空
                                         if (line.length() > 0) {
                                             // 判断拓展实现，是否实现拓展接口
                                             Class<?> clazz = Class.forName(line, true, classLoader);
@@ -877,7 +908,7 @@ public class ExtensionLoader<T> {
                                                         type + ", class line: " + clazz.getName() + "), class "
                                                         + clazz.getName() + "is not subtype of interface.");
                                             }
-                                            // 缓存自适应拓展对象的类到 `cachedAdaptiveClass`
+                                            // 缓存自适应拓展对象的类到 `cachedAdaptiveClass`，自适应实现只能有一个
                                             if (clazz.isAnnotationPresent(Adaptive.class)) {
                                                 if (cachedAdaptiveClass == null) {
                                                     cachedAdaptiveClass = clazz;
@@ -1064,8 +1095,7 @@ public class ExtensionLoader<T> {
                 // 有类型为URL的参数，生成代码：生成校验 URL 非空的代码
                 if (urlTypeIndex != -1) {
                     // Null Point check
-                    String s = String.format("\nif (arg%d == null) throw new IllegalArgumentException(\"url == null\");",
-                            urlTypeIndex);
+                    String s = String.format("\nif (arg%d == null) throw new IllegalArgumentException(\"url == null\");", urlTypeIndex);
                     code.append(s);
 
                     s = String.format("\n%s url = arg%d;", URL.class.getName(), urlTypeIndex);

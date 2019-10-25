@@ -75,7 +75,7 @@ public class LeastActiveLoadBalance extends AbstractLoadBalance {
         if (!sameWeight && totalWeight > 0) {
             // 如果权重不相同且权重大于0则按总权重数随机
             int offsetWeight = random.nextInt(totalWeight);
-            // 并确定随机值落在哪个片断上
+            // 并确定随机值落在哪个区间上
             for (int i = 0; i < leastCount; i++) {
                 int leastIndex = leastIndexes[i];
                 offsetWeight -= getWeight(invokers.get(leastIndex), invocation);

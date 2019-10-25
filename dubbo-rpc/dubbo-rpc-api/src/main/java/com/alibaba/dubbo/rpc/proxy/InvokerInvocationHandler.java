@@ -23,7 +23,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 /**
- * InvokerHandler
+ * InvokerHandler, 动态代理执行类
  */
 public class InvokerInvocationHandler implements InvocationHandler {
 

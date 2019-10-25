@@ -60,6 +60,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
      * 在 {@link #destroy()} 中使用
      */
     private final ReentrantLock destroyLock = new ReentrantLock();
+
     /**
      * Invoker 集合，从 {@link DubboProtocol#invokers} 获取
      */

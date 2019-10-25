@@ -46,7 +46,7 @@ public class ListenerExporterWrapper<T> implements Exporter<T> {
         }
         this.exporter = exporter;
         this.listeners = listeners;
-        // 执行监听器
+        // 执行监听器, 若执行过程中发生异常 RuntimeException ，打印错误日志，继续执行，最终才抛出。
         if (listeners != null && !listeners.isEmpty()) {
             RuntimeException exception = null;
             for (ExporterListener listener : listeners) {

@@ -38,7 +38,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 可解码的 RpcInvocation 实现类
+ * 可解码的 RpcInvocation 实现类, Dubbo 协议独有
  */
 public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Decodeable {
 

@@ -36,8 +36,9 @@ class InjvmInvoker<T> extends AbstractInvoker<T> {
      * 服务键
      */
     private final String key;
+
     /**
-     * Exporter 集合
+     * Exporter 集合, 指向 AbstractProtocol 中的 exporterMap
      *
      * key: 服务键
      *

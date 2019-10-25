@@ -58,14 +58,17 @@ public class ZookeeperRegistry extends FailbackRegistry {
      * Zookeeper 根节点
      */
     private final String root;
+
     /**
      * Service 接口全名集合
      */
     private final Set<String> anyServices = new ConcurrentHashSet<String>();
+
     /**
      * 监听器集合
      */
     private final ConcurrentMap<URL, ConcurrentMap<NotifyListener, ChildListener>> zkListeners = new ConcurrentHashMap<URL, ConcurrentMap<NotifyListener, ChildListener>>();
+
     /**
      * Zookeeper 客户端
      */
@@ -82,6 +85,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
             group = Constants.PATH_SEPARATOR + group;
         }
         this.root = group;
+
         // 创建 Zookeeper Client
         zkClient = zookeeperTransporter.connect(url);
         // 添加 StateListener 对象。该监听器，在重连时，调用恢复方法。
@@ -131,6 +135,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
     @Override
     protected void doRegister(URL url) {
         try {
+            // 创建zk节点，默认为临时节点
             zkClient.create(toUrlPath(url), url.getParameter(Constants.DYNAMIC_KEY, true));
         } catch (Throwable e) {
             throw new RpcException("Failed to register " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);
@@ -140,6 +145,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
     @Override
     protected void doUnregister(URL url) {
         try {
+            // 删除zk节点
             zkClient.delete(toUrlPath(url));
         } catch (Throwable e) {
             throw new RpcException("Failed to unregister " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);

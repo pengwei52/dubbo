@@ -59,14 +59,19 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorWatch
                 builder = builder.authorization("digest", authority.getBytes());
             }
             client = builder.build();
-            // 添加连接监听器
+
+            // 添加连接事件监听器
             client.getConnectionStateListenable().addListener(new ConnectionStateListener() {
+                @Override
                 public void stateChanged(CuratorFramework client, ConnectionState state) {
                     if (state == ConnectionState.LOST) {
+                        // 断开连接
                         CuratorZookeeperClient.this.stateChanged(StateListener.DISCONNECTED);
                     } else if (state == ConnectionState.CONNECTED) {
+                        // 连接成功
                         CuratorZookeeperClient.this.stateChanged(StateListener.CONNECTED);
                     } else if (state == ConnectionState.RECONNECTED) {
+                        // 重新连接
                         CuratorZookeeperClient.this.stateChanged(StateListener.RECONNECTED);
                     }
                 }
@@ -78,6 +83,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorWatch
         }
     }
 
+    @Override
     public void createPersistent(String path) {
         try {
             client.create().forPath(path);
@@ -87,6 +93,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorWatch
         }
     }
 
+    @Override
     public void createEphemeral(String path) {
         try {
             client.create().withMode(CreateMode.EPHEMERAL).forPath(path);
@@ -117,6 +124,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorWatch
         }
     }
 
+    @Override
     public boolean checkExists(String path) {
         try {
             if (client.checkExists().forPath(path) != null) {
@@ -132,14 +140,17 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorWatch
         return client.getZookeeperClient().isConnected();
     }
 
+    @Override
     public void doClose() {
         client.close();
     }
 
+    @Override
     public CuratorWatcher createTargetChildListener(String path, ChildListener listener) {
         return new CuratorWatcherImpl(listener);
     }
 
+    @Override
     public List<String> addTargetChildListener(String path, CuratorWatcher listener) {
         try {
             return client.getChildren().usingWatcher(listener).forPath(path);
@@ -150,10 +161,14 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorWatch
         }
     }
 
+    @Override
     public void removeTargetChildListener(String path, CuratorWatcher listener) {
         ((CuratorWatcherImpl) listener).unwatch();
     }
 
+    /**
+     * 监听器实现
+     */
     private class CuratorWatcherImpl implements CuratorWatcher {
 
         private volatile ChildListener listener;

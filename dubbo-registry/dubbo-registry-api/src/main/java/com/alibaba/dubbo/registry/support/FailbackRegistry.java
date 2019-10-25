@@ -89,6 +89,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             public void run() {
                 // Check and connect to the registry
                 try {
+                	// 重试
                     retry();
                 } catch (Throwable t) { // Defensive fault tolerance
                     logger.error("Unexpected error occur at failed retry, cause: " + t.getMessage(), t);

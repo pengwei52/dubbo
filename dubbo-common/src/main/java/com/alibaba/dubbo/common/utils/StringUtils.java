@@ -306,8 +306,10 @@ public final class StringUtils {
         StringBuilder sb = new StringBuilder();
         boolean isFirst = true;
         for (String s : coll) {
-            if (isFirst) isFirst = false;
-            else sb.append(split);
+            if (isFirst)
+                isFirst = false;
+            else
+                sb.append(split);
             sb.append(s);
         }
         return sb.toString();

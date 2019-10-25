@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
- * Zookeeper 客户端抽象类
+ * Zookeeper 客户端抽象类，抽象不同zk客户端的公共方法，具体操作有具体的客户端实现
  *
  * @param <TargetChildListener> 监听器具体对象类
  */
@@ -42,10 +42,12 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
      * 注册中心 URL
      */
     private final URL url;
+
     /**
      * StateListener 集合
      */
     private final Set<StateListener> stateListeners = new CopyOnWriteArraySet<StateListener>();
+
     /**
      * ChildListener 集合
      *
@@ -54,6 +56,7 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
      * value ：监听器具体对象。不同 Zookeeper 客户端，实现会不同。
      */
     private final ConcurrentMap<String, ConcurrentMap<ChildListener, TargetChildListener>> childListeners = new ConcurrentHashMap<String, ConcurrentMap<ChildListener, TargetChildListener>>();
+
     /**
      * 是否关闭
      */
@@ -75,6 +78,7 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
         if (i > 0) {
             String parentPath = path.substring(0, i);
             if (!checkExists(parentPath)) {
+                // 默认服务节点及以上都是持久节点
                 create(parentPath, false);
             }
         }
@@ -113,10 +117,11 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
         TargetChildListener targetListener = listeners.get(listener);
         // 监听器不存在，进行创建
         if (targetListener == null) {
+            // 创建真正的 ChildListener 对象。每个 Zookeeper 的库，实现不同。
             listeners.putIfAbsent(listener, createTargetChildListener(path, listener));
             targetListener = listeners.get(listener);
         }
-        // 向 Zookeeper ，真正发起订阅
+        // 使用具体的zk客户端，向 Zookeeper ，真正发起订阅
         return addTargetChildListener(path, targetListener);
     }
 

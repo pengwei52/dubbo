@@ -25,22 +25,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Activate. This annotation is useful for automatically activate certain extensions with the given criteria,
- * for examples: <code>@Activate</code> can be used to load certain <code>Filter</code> extension when there are
- * multiple implementations.
- * <ol>
- * <li>{@link Activate#group()} specifies group criteria. Framework SPI defines the valid group values.
- * <li>{@link Activate#value()} specifies parameter key in {@link URL} criteria.
- * </ol>
- * SPI provider can call {@link ExtensionLoader#getActivateExtension(URL, String, String)} to find out all activated
- * extensions with the given criteria.
+ * Activate 用于配置扩展被自动激活加载条件。比如，Filter 扩展，有多个实现，使用 @Activate 的扩展可以根据条件被自动加载。
  *
- * @see SPI
- * @see URL
- * @see ExtensionLoader
- */
-/**
- * Activate
  * <p/>
  * 对于可以被框架中自动激活加载扩展，此 Annotation 用于配置扩展被自动激活加载条件。
  * 比如，过滤扩展，有多个实现，使用 Activate Annotation 的扩展可以根据条件被自动加载。

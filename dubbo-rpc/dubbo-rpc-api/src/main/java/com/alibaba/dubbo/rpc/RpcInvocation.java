@@ -38,20 +38,24 @@ public class RpcInvocation implements Invocation, Serializable {
      * 方法名
      */
     private String methodName;
+
     /**
      * 方法参数类型数组 {@link Method#getParameterTypes()}
      */
     private Class<?>[] parameterTypes;
+
     /**
      * 方法参数数组
      */
     private Object[] arguments;
+
     /**
      * 隐式参数集合
      */
     private Map<String, String> attachments;
+
     /**
-     * Invoker 对象
+     * 发起调用的 Invoker 对象
      *
      * 不序列化
      */

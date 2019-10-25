@@ -19,7 +19,7 @@ package com.alibaba.dubbo.remoting.zookeeper;
 import java.util.List;
 
 /**
- * 节点监听器接口
+ * 节点变更监听器接口
  */
 public interface ChildListener {
 

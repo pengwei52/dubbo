@@ -94,7 +94,7 @@ public class MergeableClusterInvoker<T> implements Invoker<T> {
         for (final Invoker<T> invoker : invokers) {
             Future<Result> future = executor.submit(new Callable<Result>() {
                 public Result call() {
-                    // RPC 调用
+                    // RPC 调用, 传入 会话域
                     return invoker.invoke(new RpcInvocation(invocation, invoker));
                 }
             });

@@ -19,6 +19,7 @@ package com.alibaba.dubbo.demo.provider;
 import com.alibaba.dubbo.demo.DemoService;
 import com.alibaba.dubbo.demo.ParamCallback;
 import com.alibaba.dubbo.demo.entity.User;
+import com.alibaba.dubbo.demo.enumx.Sex;
 
 import java.util.Collection;
 
@@ -87,5 +88,29 @@ public class DemoServiceImpl implements DemoService {
     public void demo(String name, String password, User user) {
 
     }
+
+	@Override
+	public void demo(Sex sex) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void hello(String name) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void hello01(String name) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void hello02(String name) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }

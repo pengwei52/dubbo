@@ -23,14 +23,19 @@ import java.util.concurrent.atomic.AtomicInteger;
  * InternalThreadFactory.
  */
 public class NamedThreadFactory implements ThreadFactory {
+    // 线程池个数自增序列
     private static final AtomicInteger POOL_SEQ = new AtomicInteger(1);
 
+    // 线程自增序列
     private final AtomicInteger mThreadNum = new AtomicInteger(1);
 
+    // 线程名前缀
     private final String mPrefix;
 
+    // 是否是后台线程
     private final boolean mDaemon;
 
+    // 线程分组
     private final ThreadGroup mGroup;
 
     public NamedThreadFactory() {
@@ -48,6 +53,7 @@ public class NamedThreadFactory implements ThreadFactory {
         mGroup = (s == null) ? Thread.currentThread().getThreadGroup() : s.getThreadGroup();
     }
 
+    @Override
     public Thread newThread(Runnable runnable) {
         String name = mPrefix + mThreadNum.getAndIncrement();
         Thread ret = new Thread(mGroup, runnable, name, 0);

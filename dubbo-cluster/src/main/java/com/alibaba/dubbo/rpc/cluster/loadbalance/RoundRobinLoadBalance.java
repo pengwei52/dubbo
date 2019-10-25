@@ -29,6 +29,8 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * Round robin load balance.
+ * 
+ * 原理：每一次把来自用户的请求轮流分配给内部中的服务器。如：从1开始，一直到N(其中，N是内部服务器的总个数)，然后重新开始循环。
  *
  * 轮循，按公约后的权重设置轮循比率。
  * 存在慢的提供者累积请求的问题，比如：第二台机器很慢，但没挂，当请求调到第二台时就卡在那，久而久之，所有请求都卡在调到第二台上。
@@ -47,19 +49,19 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
     @Override
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
         String key = invokers.get(0).getUrl().getServiceKey() + "." + invocation.getMethodName();
-        int length = invokers.size(); // Number of invokers
-        int maxWeight = 0; // The maximum weight
-        int minWeight = Integer.MAX_VALUE; // The minimum weight
+        int length = invokers.size(); // 总个数
+        int maxWeight = 0; // 最大权重
+        int minWeight = Integer.MAX_VALUE; // 最小权重
         final LinkedHashMap<Invoker<T>, IntegerWrapper> invokerToWeightMap = new LinkedHashMap<Invoker<T>, IntegerWrapper>();
         int weightSum = 0;
         // 计算最小、最大权重，总的权重和。
         for (int i = 0; i < length; i++) {
             int weight = getWeight(invokers.get(i), invocation);
-            maxWeight = Math.max(maxWeight, weight); // Choose the maximum weight
-            minWeight = Math.min(minWeight, weight); // Choose the minimum weight
+            maxWeight = Math.max(maxWeight, weight); // 选择最大权重
+            minWeight = Math.min(minWeight, weight); // 选择最小权重
             if (weight > 0) {
-                invokerToWeightMap.put(invokers.get(i), new IntegerWrapper(weight));
-                weightSum += weight;
+                invokerToWeightMap.put(invokers.get(i), new IntegerWrapper(weight)); // 保存Invoker的权重
+                weightSum += weight;	// 累计总权重
             }
         }
         // 获得 AtomicPositiveInteger 对象
@@ -74,7 +76,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
         if (maxWeight > 0 && minWeight < maxWeight) {
             int mod = currentSequence % weightSum; // 剩余权重
             for (int i = 0; i < maxWeight; i++) { // 循环最大权重
-                for (Map.Entry<Invoker<T>, IntegerWrapper> each : invokerToWeightMap.entrySet()) { // 循环 Invoker 集合
+                for (Map.Entry<Invoker<T>, IntegerWrapper> each : invokerToWeightMap.entrySet()) {
                     final Invoker<T> k = each.getKey();
                     final IntegerWrapper v = each.getValue();
                     // 剩余权重归 0 ，当前 Invoker 还有剩余权重，返回该 Invoker 对象

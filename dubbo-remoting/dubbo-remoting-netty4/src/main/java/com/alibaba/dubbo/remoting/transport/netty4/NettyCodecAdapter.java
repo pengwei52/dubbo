@@ -71,6 +71,7 @@ final class NettyCodecAdapter {
         return decoder;
     }
 
+    // 编码器
     private class InternalEncoder extends MessageToByteEncoder {
 
         @Override
@@ -91,6 +92,7 @@ final class NettyCodecAdapter {
 
     }
 
+    // 解码器
     private class InternalDecoder extends ByteToMessageDecoder {
 
         @Override

@@ -20,6 +20,7 @@ import com.alibaba.dubbo.demo.DemoService;
 import com.alibaba.dubbo.demo.ParamCallback;
 import com.alibaba.dubbo.demo.TestException;
 import com.alibaba.dubbo.demo.entity.User;
+import com.alibaba.dubbo.demo.enumx.Sex;
 import com.alibaba.dubbo.rpc.RpcContext;
 import com.alibaba.fastjson.JSON;
 
@@ -100,6 +101,30 @@ public class DemoServiceImpl implements DemoService {
     public void demo(String name, String password, User users) {
 
     }
+
+	@Override
+	public void demo(Sex sex) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void hello(String name) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void hello01(String name) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void hello02(String name) {
+		// TODO Auto-generated method stub
+		
+	}
 
 //    public String getTest01() {
 //        return test01;

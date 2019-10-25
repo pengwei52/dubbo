@@ -43,6 +43,7 @@ public class SpringExtensionFactory implements ExtensionFactory {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getExtension(Class<T> type, String name) {
+        // 遍历 contexts ，调用其 ApplicationContext#getBean(name) 方法，获得 Bean 对象，直到成功并且值类型正确。
         for (ApplicationContext context : contexts) {
             if (context.containsBean(name)) {
                 // 获得属性

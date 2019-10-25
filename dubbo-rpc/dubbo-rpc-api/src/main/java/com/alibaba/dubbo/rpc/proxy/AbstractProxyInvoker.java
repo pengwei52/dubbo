@@ -36,10 +36,12 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
      * 代理的对象，一般是 Service 实现对象
      */
     private final T proxy;
+
     /**
      * 接口类型，一般是 Service 接口
      */
     private final Class<T> type;
+
     /**
      * URL 对象，一般是暴露服务的 URL 对象
      */
@@ -60,14 +62,17 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
         this.url = url;
     }
 
+    @Override
     public Class<T> getInterface() {
         return type;
     }
 
+    @Override
     public URL getUrl() {
         return url;
     }
 
+    @Override
     public boolean isAvailable() {
         return true;
     }
@@ -76,6 +81,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     public void destroy() {
     }
 
+    @Override
     public Result invoke(Invocation invocation) throws RpcException {
         try {
             return new RpcResult(doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments()));

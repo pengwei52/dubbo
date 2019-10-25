@@ -127,6 +127,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         // 当 RegistryConfig 对象数组为空时，若有 `dubbo.registry.address` 配置，进行创建。
         // for backward compatibility 向后兼容
         if (registries == null || registries.isEmpty()) {
+            // 从环境变量或者配置文件中查找属性
             String address = ConfigUtils.getProperty("dubbo.registry.address");
             if (address != null && address.length() > 0) {
                 registries = new ArrayList<RegistryConfig>();
@@ -198,6 +199,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         // 创建 注册中心 URL 数组
         List<URL> registryList = new ArrayList<URL>();
         if (registries != null && !registries.isEmpty()) {
+            // 支持多注册中心
             for (RegistryConfig config : registries) {
                 // 获得注册中心的地址
                 String address = config.getAddress();
@@ -209,10 +211,9 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                     address = sysaddress;
                 }
                 // 有效的地址
-                if (address.length() > 0
-                        && !RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(address)) {
+                if (address.length() > 0 && !RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(address)) {
                     Map<String, String> map = new HashMap<String, String>();
-                    // 将各种配置对象，添加到 `map` 集合中。
+                    // 将各种配置对象的属性，添加到 `map` 集合中。
                     appendParameters(map, application);
                     appendParameters(map, config);
                     // 添加 `path` `dubbo` `timestamp` `pid` 到 `map` 集合中。
@@ -235,9 +236,13 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                     // 循环 `url` ，设置 "registry" 和 "protocol" 属性。
                     for (URL url : urls) {
                         // 设置 `registry=${protocol}` 和 `protocol=registry` 到 URL
+                        // 添加registry参数，比如 registry=zookeeper
                         url = url.addParameter(Constants.REGISTRY_KEY, url.getProtocol());
+                        // 设置 registry:// 开头
                         url = url.setProtocol(Constants.REGISTRY_PROTOCOL);
                         // 添加到结果
+                        // 若是服务提供者，判断是否只订阅不注册。如果是，不添加结果到 registryList 中
+                        // 若是服务消费者，判断是否只注册不订阅。如果是，不添加到结果 registryList
                         if ((provider && url.getParameter(Constants.REGISTER_KEY, true)) // 服务提供者 && 注册 https://dubbo.gitbooks.io/dubbo-user-book/demos/subscribe-only.html
                                 || (!provider && url.getParameter(Constants.SUBSCRIBE_KEY, true))) { // 服务消费者 && 订阅 https://dubbo.gitbooks.io/dubbo-user-book/demos/registry-only.html
                             registryList.add(url);
@@ -340,8 +345,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                     }
                 }
                 if (!hasMethod) {
-                    throw new IllegalStateException("The interface " + interfaceClass.getName()
-                            + " not found method " + methodName);
+                    throw new IllegalStateException("The interface " + interfaceClass.getName() + " not found method " + methodName);
                 }
             }
         }
@@ -380,6 +384,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                 throw new IllegalStateException("No such constructor \"public " + localClass.getSimpleName() + "(" + interfaceClass.getName() + ")\" in local implementation class " + localClass.getName());
             }
         }
+        // `mock` 配置项的校验
         if (ConfigUtils.isNotEmpty(mock)) {
             if (mock.startsWith(Constants.RETURN_PREFIX)) { // 处理 "return " 开头的情况
                 String value = mock.substring(Constants.RETURN_PREFIX.length());

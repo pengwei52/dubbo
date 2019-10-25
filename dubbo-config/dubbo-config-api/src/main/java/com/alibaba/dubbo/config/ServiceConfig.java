@@ -75,7 +75,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     private static final long serialVersionUID = 3033787999037024738L;
 
     /**
-     * 自适应 Protocol 实现对象
+     * 自适应 Protocol 实现对象, 其中 export 和 refer 被 @Adaptive 修饰
      */
     private static final Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
 
@@ -130,6 +130,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     private String path; // TODO 芋艿
     // method configuration
     private List<MethodConfig> methods;
+    // 公共的提供者配置
     private ProviderConfig provider;
 
     /**
@@ -265,12 +266,14 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
      * 暴露服务
      */
     public synchronized void export() {
-        // 当 export 或者 delay 未配置，从 ProviderConfig 对象读取。
+        // 当 export 或者 delay 未配置，从 ProviderConfig 对象读取配置。
         if (provider != null) {
             if (export == null) {
+                // 是否暴露该服务
                 export = provider.getExport();
             }
             if (delay == null) {
+                // 延迟暴露
                 delay = provider.getDelay();
             }
         }
@@ -282,12 +285,13 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         // 延迟暴露
         if (delay != null && delay > 0) {
             delayExportExecutor.schedule(new Runnable() {
+            	@Override
                 public void run() {
                     doExport();
                 }
             }, delay, TimeUnit.MILLISECONDS);
-        // 立即暴露
         } else {
+            // 立即暴露
             doExport();
         }
     }
@@ -458,9 +462,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     /**
      * 暴露 Dubbo URL
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
-        // 加载注册中心 URL 数组
+        // 加载注册中心 URL 数组，支持多注册中心
         List<URL> registryURLs = loadRegistries(true);
         // 循环 `protocols` ，向逐个注册中心分组暴露服务。
         for (ProtocolConfig protocolConfig : protocols) {
@@ -474,10 +477,12 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
      * @param protocolConfig 协议配置对象
      * @param registryURLs 注册中心链接对象数组
      */
-    private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
         // 协议名
         String name = protocolConfig.getName();
         if (name == null || name.length() == 0) {
+            // 默认 dubbo 协议
             name = "dubbo";
         }
 
@@ -489,13 +494,15 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (ConfigUtils.getPid() > 0) {
             map.put(Constants.PID_KEY, String.valueOf(ConfigUtils.getPid()));
         }
-        // 将各种配置对象，添加到 `map` 集合中。
+
+        // 将各种配置对象的属性，添加到 `map` 集合中。
         appendParameters(map, application);
         appendParameters(map, module);
         appendParameters(map, provider, Constants.DEFAULT_KEY); // ProviderConfig ，为 ServiceConfig 的默认属性，因此添加 `default` 属性前缀。
         appendParameters(map, protocolConfig);
         appendParameters(map, this);
-        // 将 MethodConfig 对象数组，添加到 `map` 集合中。
+
+        // 如果对指定方法进行了配置，将 MethodConfig 对象中的属性，添加到 `map` 集合中。
         if (methods != null && !methods.isEmpty()) {
             for (MethodConfig method : methods) {
                 // 将 MethodConfig 对象，添加到 `map` 集合中。
@@ -568,7 +575,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 map.put("revision", revision); // 修订本
             }
 
-            String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames(); // 获得方法数组
+            // 获得方法数组
+            String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();
             if (methods.length == 0) {
                 logger.warn("NO method found in service interface " + interfaceClass.getName());
                 map.put("methods", Constants.ANY_VALUE);
@@ -586,7 +594,9 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         }
         // 协议为 injvm 时，不注册，不通知。
         if ("injvm".equals(protocolConfig.getName())) {
+            // 不注册
             protocolConfig.setRegister(false);
+            // 不通知
             map.put("notify", "false");
         }
         // export service
@@ -595,11 +605,12 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             contextPath = provider.getContextpath();
         }
 
-        // host、port
+        // 获取服务暴露的 host、port
         String host = this.findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = this.findConfigedPorts(protocolConfig, name, map);
 
-        // 创建 Dubbo URL 对象
+        // 创建服务暴露 URL
+        // （比如：dubbo://10.18.88.154:20880/com.alibaba.dubbo.demo.DemoService?accesslog=true&anyhost=true&application=demo-provider&bind.ip=10.18.88.154&bind.port=20880）
         URL url = new URL(name, host, port, (contextPath == null || contextPath.length() == 0 ? "" : contextPath + "/") + path, map);
 
         // 配置规则，参见《配置规则》https://dubbo.gitbooks.io/dubbo-user-book/demos/config-rule.html
@@ -612,37 +623,45 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         // don't export when none is configured
         if (!Constants.SCOPE_NONE.toString().equalsIgnoreCase(scope)) {
 
-            // 服务本地暴露
+            // 如果没有显示指定远程暴露，则会进行本地服务暴露
             // export to local if the config is not remote (export to remote only when config is remote)
             if (!Constants.SCOPE_REMOTE.toString().equalsIgnoreCase(scope)) {
                 exportLocal(url);
             }
 
-            // 服务远程暴露
+            // 如果没有显示指定服务为本地暴露，则远程服务暴露
             // export to remote if the config is not local (export to local only when config is local)
             if (!Constants.SCOPE_LOCAL.toString().equalsIgnoreCase(scope)) {
                 if (logger.isInfoEnabled()) {
                     logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
                 }
+                // 多注册中心
                 if (registryURLs != null && !registryURLs.isEmpty()) {
                     for (URL registryURL : registryURLs) {
-                        // "dynamic" ：服务是否动态注册，如果设为false，注册后将显示后disable状态，需人工启用，并且服务提供者停止时，也不会自动取消册，需人工禁用。
+                        // "dynamic" ：服务是否动态注册，如果设为false，注册后将显示为disable状态，需人工启用，并且服务提供者停止时，也不会自动取消册，需人工禁用。
                         url = url.addParameterIfAbsent("dynamic", registryURL.getParameter("dynamic"));
                         // 获得监控中心 URL
                         URL monitorUrl = loadMonitor(registryURL); // TODO 芋艿，监控
                         if (monitorUrl != null) {
+                            // 将监控中心的 URL 作为 "monitor" 参数添加到服务提供者的 URL 中，并且需要编码
                             url = url.addParameterAndEncoded(Constants.MONITOR_KEY, monitorUrl.toFullString());
                         }
                         if (logger.isInfoEnabled()) {
                             logger.info("Register dubbo service " + interfaceClass.getName() + " url " + url + " to registry " + registryURL);
                         }
-                        // 使用 ProxyFactory 创建 Invoker 对象
+                        // 将暴露服务的 URL 作为 "export" 参数添加到注册中心的 URL 中。通过这样的方式，注册中心的 URL 中，包含了服务提供者的配置。
+                        // 使用 ProxyFactory 创建 Invoker 对象, 该 Invoker 对象，执行 #invoke(invocation) 方法时，内部会调用 Service 对象( ref )对应的调用方法。
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));
 
-                        // 创建 DelegateProviderMetaDataInvoker 对象
+                        // 创建 DelegateProviderMetaDataInvoker 对象, 该对象在 Invoker 对象的基础上，增加了当前服务提供者 ServiceConfig 对象。
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
                         // 使用 Protocol 暴露 Invoker 对象
+                        // 此处 Dubbo SPI 自适应的特性的好处就出来了，可以自动根据 URL 参数，获得对应的拓展实现。
+                        // 例如，invoker 传入后，根据 invoker.url 自动获得对应 Protocol 拓展实现为 RegistryProtocol 。
+                        // 调用顺序是：
+                        // Protocol$Adaptive => ProtocolFilterWrapper => ProtocolListenerWrapper => RegistryProtocol
+                        // Protocol$Adaptive => ProtocolFilterWrapper => ProtocolListenerWrapper => DubboProtocol
                         Exporter<?> exporter = protocol.export(wrapperInvoker);
                         // 添加到 `exporters`
                         exporters.add(exporter);
@@ -674,21 +693,24 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (!Constants.LOCAL_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
             // 创建本地 Dubbo URL
             URL local = URL.valueOf(url.toFullString())
-                    .setProtocol(Constants.LOCAL_PROTOCOL) // injvm
+                    .setProtocol(Constants.LOCAL_PROTOCOL) // 设置为 injvm 协议
                     .setHost(LOCALHOST) // 本地
                     .setPort(0); // 端口=0
             // 添加服务的真实类名，例如 DemoServiceImpl ，仅用于 RestProtocol 中。
             ServiceClassHolder.getInstance().pushServiceClass(getServiceClass(ref));
             // 使用 ProxyFactory 创建 Invoker 对象
-            // 使用 Protocol 暴露 Invoker 对象
-            Exporter<?> exporter = protocol.export(proxyFactory.getInvoker(ref, (Class) interfaceClass, local));
+            Invoker invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, local);
+            // 使用 Protocol 暴露 Invoker 对象。自动根据 URL 参数，获得对应的拓展实现。例如，invoker 传入后，根据 invoker.url 自动获得对应 Protocol 拓展实现为 InjvmProtocol 。
+            // Protocol 有两个 Wrapper 拓展实现类，所以 export(...) 方法的调用顺序是：Protocol$Adaptive => ProtocolFilterWrapper => ProtocolListenerWrapper => InjvmProtocol 。
+            Exporter<?> exporter = protocol.export(invoker);
             // 添加到 `exporters`
             exporters.add(exporter);
             logger.info("Export dubbo service " + interfaceClass.getName() + " to local registry");
         }
     }
 
-    protected Class getServiceClass(T ref) {
+    @SuppressWarnings("rawtypes")
+	protected Class getServiceClass(T ref) {
         return ref.getClass();
     }
 

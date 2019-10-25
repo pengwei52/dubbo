@@ -100,7 +100,6 @@ public class NettyClient extends AbstractClient {
     }
 
     @Override
-    @SuppressWarnings("Duplicates")
     protected void doConnect() throws Throwable {
         long start = System.currentTimeMillis();
         // 连接服务器

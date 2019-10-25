@@ -61,7 +61,7 @@ public class InjvmProtocol extends AbstractProtocol implements Protocol {
     }
 
     /**
-     * 获得 Exporter 对象
+     * 获得 Exporter 对象，查找map中是否有对应URL的服务已经暴露了。
      *
      * @param map Exporter 集合
      * @param key URL
@@ -93,14 +93,17 @@ public class InjvmProtocol extends AbstractProtocol implements Protocol {
         }
     }
 
+    @Override
     public int getDefaultPort() {
         return DEFAULT_PORT;
     }
 
+    @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         return new InjvmExporter<T>(invoker, invoker.getUrl().getServiceKey(), exporterMap);
     }
 
+    @Override
     public <T> Invoker<T> refer(Class<T> serviceType, URL url) throws RpcException {
         return new InjvmInvoker<T>(serviceType, url, url.getServiceKey(), exporterMap);
     }
@@ -131,7 +134,7 @@ public class InjvmProtocol extends AbstractProtocol implements Protocol {
         } else if (url.getParameter(Constants.GENERIC_KEY, false)) {
             // generic invocation is not local reference
             isJvmRefer = false;
-        // 当本地已经有该 Exporter 时，本地引用
+        // 当本地已经有该 Exporter 时，本地引用。本地已有的服务，不必要使用远程服务，减少网络开销，提升性能。
         } else if (getExporter(exporterMap, url) != null) {
             // by default, go through local reference if there's the service exposed locally
             isJvmRefer = true;

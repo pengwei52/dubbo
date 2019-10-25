@@ -149,6 +149,7 @@ final class LazyConnectExchangeClient implements ExchangeClient {
     private void warning(Object request) {
         if (requestWithWarning) { // 开启
             if (warningcount.get() % 5000 == 0) { // 5000 次
+                // 理论来说，不会被调用。如果被调用，那么就是一个 BUG 咯。
                 logger.warn(new IllegalStateException("safe guard client , should not be called ,must have a bug."));
             }
             warningcount.incrementAndGet(); // 增加计数

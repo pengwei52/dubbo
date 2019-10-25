@@ -34,7 +34,7 @@ public interface ZookeeperClient {
     void create(String path, boolean ephemeral);
 
     /**
-     * 删除节点
+     * 获取子节点
      *
      * @param path 节点路径
      */

@@ -17,7 +17,7 @@
 package com.alibaba.dubbo.remoting.zookeeper;
 
 /**
- * 状态监听器接口
+ * 连接状态变更监听器接口
  */
 public interface StateListener {
 

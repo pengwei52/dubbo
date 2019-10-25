@@ -49,7 +49,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * AbstractBeanDefinitionParser
+ * Dubbo Bean 定义解析器
  *
  * @export
  */
@@ -64,7 +64,8 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
      */
     private final Class<?> beanClass;
     /**
-     * 是否需要 Bean 的 `id` 属性
+     * 是否需要 Bean 的 `id` 属性。
+     * id 不存在时，自动生成编号。无需被其他应用引用的配置对象，无需自动生成编号。例如有 <dubbo:reference /> 。
      */
     private final boolean required;
 
@@ -376,8 +377,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node node = nodeList.item(i);
                 if (node instanceof Element) {
-                    if ("property".equals(node.getNodeName())
-                            || "property".equals(node.getLocalName())) {
+                    if ("property".equals(node.getNodeName()) || "property".equals(node.getLocalName())) {
                         String name = ((Element) node).getAttribute("name");
                         if (name != null && name.length() > 0) {
                             String value = ((Element) node).getAttribute("value");
@@ -513,6 +513,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
         }
     }
 
+    // 解析 XML 元素
     public BeanDefinition parse(Element element, ParserContext parserContext) {
         return parse(element, parserContext, beanClass, required);
     }

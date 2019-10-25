@@ -29,7 +29,7 @@ import javax.sound.midi.Receiver;
  * <a href="http://en.wikipedia.org/wiki/Transport_Layer">Transport Layer</a>
  * <a href="http://en.wikipedia.org/wiki/Client%E2%80%93server_model">Client/Server</a>
  *
- * 网络传输接口
+ * 网络传输接口,统一抽象通讯层的接口
  *
  * @see com.alibaba.dubbo.remoting.Transporters
  */

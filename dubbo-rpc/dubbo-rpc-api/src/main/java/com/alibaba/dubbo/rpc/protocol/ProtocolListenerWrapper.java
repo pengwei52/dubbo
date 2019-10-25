@@ -29,7 +29,7 @@ import java.util.List;
 /**
  * ListenerProtocol
  *
- * 用于给 Exporter 增加监听器。
+ * 用于给 Exporter、Invoker 增加监听器。
  */
 public class ProtocolListenerWrapper implements Protocol {
 
@@ -42,10 +42,12 @@ public class ProtocolListenerWrapper implements Protocol {
         this.protocol = protocol;
     }
 
+    @Override
     public int getDefaultPort() {
         return protocol.getDefaultPort();
     }
 
+    @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         // 注册中心协议
         if (Constants.REGISTRY_PROTOCOL.equals(invoker.getUrl().getProtocol())) {
@@ -59,6 +61,7 @@ public class ProtocolListenerWrapper implements Protocol {
         return new ListenerExporterWrapper<T>(exporter, listeners);
     }
 
+    @Override
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
         // 注册中心协议
         if (Constants.REGISTRY_PROTOCOL.equals(url.getProtocol())) {

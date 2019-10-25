@@ -70,6 +70,7 @@ public final class Version {
             if (version == null || version.length() == 0) {
                 version = cls.getPackage().getSpecificationVersion();
             }
+            // 从 jar 包命名中可能带的版本号作为结果
             if (version == null || version.length() == 0) {
                 // guess version fro jar file name if nothing's found from MANIFEST.MF
                 CodeSource codeSource = cls.getProtectionDomain().getCodeSource();

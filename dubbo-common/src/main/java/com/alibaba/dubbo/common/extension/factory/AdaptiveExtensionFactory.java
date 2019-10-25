@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * AdaptiveExtensionFactory
+ * AdaptiveExtensionFactory, 为 ExtensionFactory 的自适应拓展实现类。
  */
 @Adaptive
 public class AdaptiveExtensionFactory implements ExtensionFactory {
@@ -42,6 +42,7 @@ public class AdaptiveExtensionFactory implements ExtensionFactory {
         for (String name : loader.getSupportedExtensions()) {
             list.add(loader.getExtension(name));
         }
+        // factories 默认为 SpiExtensionFactory 和 SpringExtensionFactory 。
         factories = Collections.unmodifiableList(list);
     }
 
