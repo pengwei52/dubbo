@@ -122,6 +122,7 @@ public class RegistryProtocol implements Protocol {
         this.cluster = cluster;
     }
 
+    // SPI 注入 DubboProtocol
     public void setProtocol(Protocol protocol) {
         this.protocol = protocol;
     }
@@ -154,7 +155,7 @@ public class RegistryProtocol implements Protocol {
 
     @Override
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
-        // ************* 暴露服务 *************
+        // 暴露服务，还未向注册中心注册
         // export invoker
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
 
@@ -217,6 +218,7 @@ public class RegistryProtocol implements Protocol {
                 // 未暴露过，进行暴露服务
                 if (exporter == null) {
                     // 创建 Invoker Delegate 对象, 封装原生的invoker对象和提供者URL, Procotol$Adaptive类中通过URL的协议获取具体的协议对象进行服务暴露
+                    // 此处url变成了：dubbo://xxxx
                     final Invoker<?> invokerDelegete = new InvokerDelegete<T>(originInvoker, getProviderUrl(originInvoker));
                     // 暴露服务，创建 Exporter 对象
                     // 使用 创建的Exporter对象 + originInvoker ，创建 ExporterChangeableWrapper 对象。这样，originInvoker 就和 Exporter 对象就形成了绑定的关系。
@@ -316,7 +318,7 @@ public class RegistryProtocol implements Protocol {
      * @return
      */
     private URL getProviderUrl(final Invoker<?> origininvoker) {
-        // 获取暴露服务的URL
+        // 获取暴露服务的URL，即：dubbo://xxxx
         String export = origininvoker.getUrl().getParameterAndDecoded(Constants.EXPORT_KEY); // export
         if (export == null || export.length() == 0) {
             throw new IllegalArgumentException("The registry export url is null! registry: " + origininvoker.getUrl());
@@ -400,7 +402,7 @@ public class RegistryProtocol implements Protocol {
                     Constants.CHECK_KEY, String.valueOf(false))); // 不检查的原因是，不需要检查。
         }
 
-        // 向注册中心订阅服 务提供者 + 路由规则 + 配置规则
+        // 向注册中心订阅 服务提供者 + 路由规则 + 配置规则
         // 在该方法中，会循环获得到的服务提供者列表，调用 Protocol#refer(type, url) 方法，创建每个调用服务的 Invoker 对象。
         directory.subscribe(subscribeUrl.addParameter(Constants.CATEGORY_KEY,
                         Constants.PROVIDERS_CATEGORY + "," + Constants.CONFIGURATORS_CATEGORY + "," + Constants.ROUTERS_CATEGORY));

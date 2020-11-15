@@ -25,9 +25,6 @@ import com.alibaba.dubbo.rpc.proxy.InvokerInvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-/**
- * JavaassistRpcProxyFactory
- */
 public class JdkProxyFactory extends AbstractProxyFactory {
 
     @SuppressWarnings("unchecked")

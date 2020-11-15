@@ -117,6 +117,7 @@ final class NettyCodecAdapter {
                     }
                     // 需要更多输入，即消息不完整，标记回原有读进度，并结束
                     if (msg == Codec2.DecodeResult.NEED_MORE_INPUT) {
+                        // 读索引回滚
                         message.readerIndex(saveReaderIndex);
                         break;
                     // 解码到消息，添加到 `out`

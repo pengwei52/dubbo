@@ -332,6 +332,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
      * @throws RpcException 当发生 RpcException
      */
     protected List<Invoker<T>> list(Invocation invocation) throws RpcException {
+        // 获取Provider列表，已经被路由
         return directory.list(invocation);
     }
 

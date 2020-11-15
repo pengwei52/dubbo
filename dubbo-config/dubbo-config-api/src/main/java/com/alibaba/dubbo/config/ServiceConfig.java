@@ -151,7 +151,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
      *
      * 状态字段，非配置。
      */
-    private volatile String generic; // TODO 芋艿
+    private volatile String generic;
 
     public ServiceConfig() {
     }
@@ -415,9 +415,10 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (path == null || path.length() == 0) {
             path = interfaceName;
         }
+
         // 暴露服务
         doExportUrls();
-        // TODO 芋艿，等待 qos
+
         ProviderModel providerModel = new ProviderModel(getUniqueServiceName(), this, ref);
         ApplicationModel.initProviderModel(getUniqueServiceName(), providerModel);
     }
@@ -566,10 +567,10 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         }
 
         // generic、methods、revision
-        if (ProtocolUtils.isGeneric(generic)) {
+        if (ProtocolUtils.isGeneric(generic)) { // 泛化方式暴露接口
             map.put("generic", generic);
             map.put("methods", Constants.ANY_VALUE);
-        } else {
+        } else { // 非泛化方式
             String revision = Version.getVersion(interfaceClass, version);
             if (revision != null && revision.length() > 0) {
                 map.put("revision", revision); // 修订本
@@ -599,6 +600,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             // 不通知
             map.put("notify", "false");
         }
+
         // export service
         String contextPath = protocolConfig.getContextpath();
         if ((contextPath == null || contextPath.length() == 0) && provider != null) {
@@ -609,7 +611,6 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         String host = this.findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = this.findConfigedPorts(protocolConfig, name, map);
 
-        // 创建服务暴露 URL
         // （比如：dubbo://10.18.88.154:20880/com.alibaba.dubbo.demo.DemoService?accesslog=true&anyhost=true&application=demo-provider&bind.ip=10.18.88.154&bind.port=20880）
         URL url = new URL(name, host, port, (contextPath == null || contextPath.length() == 0 ? "" : contextPath + "/") + path, map);
 
@@ -635,7 +636,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 if (logger.isInfoEnabled()) {
                     logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
                 }
-                // 多注册中心
+                // 注册中心
                 if (registryURLs != null && !registryURLs.isEmpty()) {
                     for (URL registryURL : registryURLs) {
                         // "dynamic" ：服务是否动态注册，如果设为false，注册后将显示为disable状态，需人工启用，并且服务提供者停止时，也不会自动取消册，需人工禁用。
@@ -651,6 +652,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         }
                         // 将暴露服务的 URL 作为 "export" 参数添加到注册中心的 URL 中。通过这样的方式，注册中心的 URL 中，包含了服务提供者的配置。
                         // 使用 ProxyFactory 创建 Invoker 对象, 该 Invoker 对象，执行 #invoke(invocation) 方法时，内部会调用 Service 对象( ref )对应的调用方法。
+                        // 需要暴露服务的url会使用字段export保存在url中
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));
 
                         // 创建 DelegateProviderMetaDataInvoker 对象, 该对象在 Invoker 对象的基础上，增加了当前服务提供者 ServiceConfig 对象。
@@ -666,7 +668,9 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         // 添加到 `exporters`
                         exporters.add(exporter);
                     }
-                } else { // 用于被服务消费者直连服务提供者，参见文档 http://dubbo.io/books/dubbo-user-book/demos/explicit-target.html 。主要用于开发测试环境使用。
+                } else {
+                    // 消费者直连服务提供者，参见文档 http://dubbo.io/books/dubbo-user-book/demos/explicit-target.html 。主要用于开发测试环境使用。
+
                     // 使用 ProxyFactory 创建 Invoker 对象
                     Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, url);
 

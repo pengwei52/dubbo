@@ -377,8 +377,10 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             if (invokerUrls.isEmpty()) {
                 return;
             }
+
             // 将传入的 invokerUrls ，转成新的 urlInvokerMap
             Map<String, Invoker<T>> newUrlInvokerMap = toInvokers(invokerUrls);// Translate url list to Invoker map
+
             // 转换出新的 methodInvokerMap
             Map<String, List<Invoker<T>>> newMethodInvokerMap = toMethodInvokers(newUrlInvokerMap); // Change method name to map Invoker Map
             // state change
@@ -494,6 +496,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         Set<String> keys = new HashSet<String>();
         // 获得引用服务的协议
         String queryProtocols = this.queryMap.get(Constants.PROTOCOL_KEY);
+
         // 循环服务提供者 URL 集合，转成 Invoker 集合
         for (URL providerUrl : urls) {
             // If protocol is configured at the reference side, only the matching protocol is selected
@@ -545,8 +548,10 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                     }
                     // 若开启，创建 Invoker 对象
                     if (enabled) {
+
                         // 注意，引用服务
                         invoker = new InvokerDelegate<T>(protocol.refer(serviceType, url), url, providerUrl);
+
                     }
                 } catch (Throwable t) {
                     logger.error("Failed to refer invoker for interface:" + serviceType + ",url:(" + url + ")" + t.getMessage(), t);

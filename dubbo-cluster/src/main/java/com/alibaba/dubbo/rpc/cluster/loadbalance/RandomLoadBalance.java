@@ -40,10 +40,12 @@ public class RandomLoadBalance extends AbstractLoadBalance {
         int length = invokers.size(); // 总个数
         int totalWeight = 0; // 总权重
         boolean sameWeight = true; // 权重是否都一样
-        // 计算总权限
+        // 计算总权重
         for (int i = 0; i < length; i++) {
             int weight = getWeight(invokers.get(i), invocation); // 获得权重
             totalWeight += weight; // 累计总权重
+
+            // 判断是否存在权重不一样的情况（比较前后节点的权重）
             if (sameWeight && i > 0 && weight != getWeight(invokers.get(i - 1), invocation)) {
                 sameWeight = false;	// 计算所有权重是否一样
             }

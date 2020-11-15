@@ -40,6 +40,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
     public static final String NAME = "roundrobin";
 
     /**
+     * 全局变量
      * 服务方法与计数器的映射
      *
      * KEY：serviceKey + "." + methodName
@@ -49,11 +50,12 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
     @Override
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
         String key = invokers.get(0).getUrl().getServiceKey() + "." + invocation.getMethodName();
-        int length = invokers.size(); // 总个数
-        int maxWeight = 0; // 最大权重
+        int length = invokers.size();   // 总个数
+        int maxWeight = 0;              // 最大权重
         int minWeight = Integer.MAX_VALUE; // 最小权重
         final LinkedHashMap<Invoker<T>, IntegerWrapper> invokerToWeightMap = new LinkedHashMap<Invoker<T>, IntegerWrapper>();
         int weightSum = 0;
+
         // 计算最小、最大权重，总的权重和。
         for (int i = 0; i < length; i++) {
             int weight = getWeight(invokers.get(i), invocation);
@@ -64,6 +66,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
                 weightSum += weight;	// 累计总权重
             }
         }
+
         // 获得 AtomicPositiveInteger 对象
         AtomicPositiveInteger sequence = sequences.get(key);
         if (sequence == null) {
@@ -72,6 +75,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
         }
         // 获得当前顺序号，并递增 + 1
         int currentSequence = sequence.getAndIncrement();
+
         // 权重不相等，顺序根据权重分配
         if (maxWeight > 0 && minWeight < maxWeight) {
             int mod = currentSequence % weightSum; // 剩余权重
@@ -91,6 +95,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
                 }
             }
         }
+
         // 权重相等，平均顺序获得
         // Round robin
         return invokers.get(currentSequence % length);

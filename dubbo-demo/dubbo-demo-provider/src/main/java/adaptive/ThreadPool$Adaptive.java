@@ -3,6 +3,7 @@ package adaptive;
 import com.alibaba.dubbo.common.extension.ExtensionLoader;
 
 public class ThreadPool$Adaptive implements com.alibaba.dubbo.common.threadpool.ThreadPool {
+
 	public java.util.concurrent.Executor getExecutor(com.alibaba.dubbo.common.URL arg0) {
 		if (arg0 == null)
 			throw new IllegalArgumentException("url == null");

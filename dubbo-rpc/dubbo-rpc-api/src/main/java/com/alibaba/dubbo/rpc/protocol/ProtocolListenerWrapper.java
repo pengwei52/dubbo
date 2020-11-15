@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * ListenerProtocol
+ * Protocol 的包装类
  *
  * 用于给 Exporter、Invoker 增加监听器。
  */

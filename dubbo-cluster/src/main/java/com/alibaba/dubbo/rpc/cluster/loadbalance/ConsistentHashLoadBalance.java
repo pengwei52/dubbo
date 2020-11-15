@@ -67,7 +67,7 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
          */
         private final TreeMap<Long, Invoker<T>> virtualInvokers;
         /**
-         * 每个Invoker 对应的虚拟节点数
+         * 每个Invoker 对应的虚拟节点数，默认160
          */
         private final int replicaNumber;
         /**
@@ -92,10 +92,11 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
             for (int i = 0; i < index.length; i++) {
                 argumentIndex[i] = Integer.parseInt(index[i]);
             }
+
             // 初始化 virtualInvokers
             for (Invoker<T> invoker : invokers) {
                 String address = invoker.getUrl().getAddress();
-                // 每四个虚拟结点为一组，为什么这样？下面会说到
+                // 每四个虚拟节点为一组，为什么这样？下面会说到
                 for (int i = 0; i < replicaNumber / 4; i++) {
                     // 这组虚拟结点得到惟一名称
                     byte[] digest = md5(address + i);
@@ -130,6 +131,7 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
 
         private Invoker<T> selectForKey(long hash) {
             // 得到大于当前 key 的那个子 Map ，然后从中取出第一个 key ，就是大于且离它最近的那个 key
+            // tailMap: 返回从fromKey到结尾的集合：包含fromKey
             Map.Entry<Long, Invoker<T>> entry = virtualInvokers.tailMap(hash, true).firstEntry();
             // 不存在，则取 virtualInvokers 第一个
         	if (entry == null) {

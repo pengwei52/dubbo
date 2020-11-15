@@ -217,7 +217,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         return urls;
     }
 
-    //
+    // 获取代理对象
     public synchronized T get() {
         // 已销毁，抛异常
         if (destroyed) {

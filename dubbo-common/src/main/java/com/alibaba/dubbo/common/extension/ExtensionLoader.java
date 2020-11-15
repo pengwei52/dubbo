@@ -234,7 +234,7 @@ public class ExtensionLoader<T> {
     }
 
     /**
-     * 根据拓展点的接口，获得拓展加载器
+     * 根据扩展点的接口，获得拓展加载器
      *
      * @param type 接口
      * @param <T> 泛型
@@ -254,7 +254,7 @@ public class ExtensionLoader<T> {
                     ") is not extension, because WITHOUT @" + SPI.class.getSimpleName() + " Annotation!");
         }
 
-        // 获得接口对应的拓展点加载器
+        // 获得接口对应的扩展点加载器
         ExtensionLoader<T> loader = (ExtensionLoader<T>) EXTENSION_LOADERS.get(type);
         if (loader == null) {
             EXTENSION_LOADERS.putIfAbsent(type, new ExtensionLoader<T>(type));
@@ -1021,6 +1021,7 @@ public class ExtensionLoader<T> {
      */
     private Class<?> getAdaptiveExtensionClass() {
         getExtensionClasses();
+        // 如果@Adaptive注解在类上，cachedAdaptiveClass 不为空
         if (cachedAdaptiveClass != null) {
             return cachedAdaptiveClass;
         }
